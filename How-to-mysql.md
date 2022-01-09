@@ -190,10 +190,71 @@ WHERE major IN ('Biology', 'Sociology') AND student_id > 7;
 
 Create a Company Database
 Database: https://www.mikedane.com/databases/sql/creating-company-database/
+
+LIMIT
 ```
 Get top 5; Only MysqlDB supports LIMIT
 SELECT * FROM Employee LIMIT 5;
 
 ALL DATABASE supports TOP
 SELECT TOP 3 * FROM Employee;
+```
+
+DISTINCT
+
+```
+SELECT DISTINCT emp_id FROM employee;
+```
+
+### FUNCTIONS
+-- Find the number of employee
+
+COUNT
+```
+SELECT COUNT(*) FROM employee; #9
+SELECT COUNT(super_id) FROM employee; #9
+SELECT COUNT(emp_id) FROM employee
+WHERE sex='F' AND  birth_day > '1970-01-01';
+```
+
+-- Find the sum of all employee salaries
+
+SUM
+```
+SELECT SUM(salary) FROM employee;
+```
+
+-- Find the average of all employee salaries
+
+AVG
+```
+SELECT AVG(salary) FROM employee;
+SELECT AVG(salary) FROM employee WHERE sex='M';
+```
+
+
+-- Find out how many females and males
+
+GROUP BY
+```
+SELECT COUNT(sex), sex FROM employee GROUP BY  sex;
+SELECT SUM(total_sales), emp_id FROM works_with GROUP BY emp_id;
+SELECT SUM(total_sales), client_id FROM works_with GROUP BY client_id;
+```
+
+
+### WILDCARDS
+% = ANY # CHARACTERS
+
+_ = ONE CHARACTER
+
+-- Find any clients who are in LLC
+
+LIKE
+```
+SELECT client_id FROM client where client_name LIKE '%LLC'; #END AT LLC 
+SELECT * FROM BRANCH_SUPPLIER where supplier_name LIKE '%LABEL%';
+
+
+SELECT * FROM employee where birth_day LIKE '____-10%'; #Find employee which has birthdate on October(10), YEAR is 4-digit so 4 underscore because we know the format of the date, 
 ```
