@@ -190,7 +190,7 @@ WHERE major IN ('Biology', 'Sociology') AND student_id > 7;
 
 Create a Company Database
 Database: https://www.mikedane.com/databases/sql/creating-company-database/
-
+![CompanyDB](/images/COMPANYDB.png)
 LIMIT
 ```
 Get top 5; Only MysqlDB supports LIMIT
@@ -257,4 +257,178 @@ SELECT * FROM BRANCH_SUPPLIER where supplier_name LIKE '%LABEL%';
 
 
 SELECT * FROM employee where birth_day LIKE '____-10%'; #Find employee which has birthdate on October(10), YEAR is 4-digit so 4 underscore because we know the format of the date, 
+```
+
+
+UNION
+
+1. Should have the same number of columns, 1 column on 1 table and 1 column on another
+2. They should have the same datatypes
+```
+SELECT first_name from employee;
+# first_name
+David
+Jan
+Michael
+
+SELECT branch_name from branch;
+# branch_name
+Corporate
+Scranton
+Stamford
+
+SELECT first_name from employee UNION
+SELECT branch_name from branch;
+# first_name
+David
+Jan
+Michael
+Corporate
+Scranton
+Stamford
+
+SELECT first_name from employee UNION
+SELECT branch_name from branch UNION
+SELECT client_name from client;
+
+# first_name
+David
+Jan
+Michael
+Corporate
+Scranton
+Stamford
+FedEx
+John Daly Law, LLC
+Scranton Whitepages
+```
+JOINS
+
+Combining tables based on RELATED columns
+```
+-- JOINS
+-- INNER JOIN - only when there is a match on both tables
+-- Find all branches and the name of the managers
+select b.branch_id, B.branch_name, CONCAT_WS(' ', e.first_name, e.last_name) as Managers 
+FROM employee as e 
+JOIN branch as b 
+ON b.mgr_id = e.emp_id;
+
+#branch_id, branch_name, Managers 
+1	Corporate	David Wallace
+2	Scranton	Michael Scott
+3	Stamford	Josh Porter
+
+-- LEFT JOIN - since employee table will join the branch table (employee -> branch), employee is on the left, it will display all data inside employee.
+
+select b.branch_id, B.branch_name, CONCAT_WS(' ', e.first_name, e.last_name) as Managers 
+FROM employee as e 
+LEFT JOIN branch as b 
+ON b.mgr_id = e.emp_id;
+#branch_id, branch_name, Managers 
+1	Corporate	David Wallace
+NULL NULL		Jan Levinson
+2	Scranton	Michael Scott
+NULL NULL		Angela Martin
+NULL NULL		Kelly Kapoor
+NULL NULL		Stanley Hudson
+3	Stamford	Josh Porter
+.... more
+
+
+-- RIGHT JOIN - since employee table will join the branch table (employee -> branch), branch is on the right, it will display all data inside branch table.
+#branch_id, branch_name, Managers 
+1	Corporate	David Wallace
+2	Scranton	Michael Scott
+3	Stamford	Josh Porter
+4	Buffalo	    NULL
+```
+
+### NESTED QUERY
+```
+-- Find names of all employees who have sold over 30,000 to single client
+-- my solution
+Select DISTINct e.first_name, e.last_name
+from employee as e 
+JOIN works_with as w 
+on total_sales > 30000 and w.emp_id = e.emp_id;
+-- tutorial solution
+SELECT e.first_name, e.last_name
+FROM employee as e
+WHERE e.emp_id IN (
+    SELECT w.emp_id
+    FROM works_with as w
+    WHERE w.total_sales > 30000
+);
+
+
+--Find all clients who are handled by the branch that Michael Scott manages, Assume you know Michales ID
+-- my solution
+Select c.client_name 
+FROM client as c
+WHERE c.branch_id = (
+    SELECT b.branch_id
+    FROM branch as b
+    WHERE b.mgr_id = 102
+	LIMIT 1
+);
+
+-- Note: Its always good practice to use LIMIT 1 if where statement uses "="
+```
+
+
+### ON DELETE
+Deleting data when there are foreign keys associated to them
+```
+-- ON DELETE SET NULL - if you delete a row, the associated data will be set to NULL.
+					- use this if the connection is just a foreign key in the table
+Delete an employee 102 on employee table
+#employee table
+100	David	Wallace	1967-11-17	M	250000		1
+101	Jan	Levinson	1961-05-11	F	110000	100	1
+102	Michael	Scott	1964-03-15	M	75000	100	2
+...
+# branch table
+1	Corporate	100	2006-02-09
+2	Scranton	102	1992-04-06
+3	Stamford	106	1998-02-13
+4	Buffalo		NULL	NULL
+
+DELETE FROM employee WHERE emp_id = 102;
+
+# branch table after delete employee 102
+1	Corporate	100	2006-02-09
+2	Scranton	NULL 1992-04-06
+3	Stamford	106	1998-02-13
+4	Buffalo		NULL	NULL
+
+-- ON DELETE CASCADE - if you delete a row, the associated data on another table will be deleted as well. 
+					- use this if the data is also act as primary key like branch_supplier
+Sample:
+CREATE TABLE branch_supplier (
+  branch_id INT,
+  supplier_name VARCHAR(40),
+  supply_type VARCHAR(40),
+  PRIMARY KEY(branch_id, supplier_name),
+  FOREIGN KEY(branch_id) REFERENCES branch(branch_id) ON DELETE CASCADE
+);
+
+when branch_id is deleted from branch table, all its data on branch_supplier table will also be deleted. 
+# branch_supplier
+	2	Hammer Mill	Paper
+	2	J.T. Forms & Labels	Custom Forms
+	2	Uni-ball	Writing Utensils
+	3	Hammer Mill	Paper
+	3	Patriot Paper	Paper
+	3	Stamford Lables	Custom Forms
+	3	Uni-ball	Writing Utensils
+
+DELETE FROM branch_supplier WHERE branch_id = 2;
+
+# branch_supplier
+	3	Hammer Mill	Paper
+	3	Patriot Paper	Paper
+	3	Stamford Lables	Custom Forms
+	3	Uni-ball	Writing Utensils
+
 ```
